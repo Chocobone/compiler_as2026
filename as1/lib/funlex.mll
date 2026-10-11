@@ -44,6 +44,13 @@ rule initial = parse
   | alpha (alpha | digit)*  { Tokens.tok_id(make_pos lexbuf, Lexing.lexeme lexbuf) }
   | digit+  { Tokens.tok_num(make_pos lexbuf, int_of_string (Lexing.lexeme lexbuf)) }
   | "#" (digit+ as n) { Tokens.tok_proj(make_pos lexbuf, int_of_string n) }
+  | "/*"   { comment lexbuf; initial lexbuf }
   | "\n"   { Errormsg.new_line(make_pos lexbuf); initial lexbuf }
   | eof    { raise Eof }
   | _     { Errormsg.impossible("unexpected character: " ^ Lexing.lexeme lexbuf)}
+and comment = parse
+  | "/*"   { comment lexbuf; comment lexbuf }
+  | "*/"   { }
+  | "\n"   { Errormsg.new_line(make_pos lexbuf); comment lexbuf }
+  | _   { comment lexbuf }
+  | eof    { Errormsg.impossible("expected '*/' but get EoF") }
